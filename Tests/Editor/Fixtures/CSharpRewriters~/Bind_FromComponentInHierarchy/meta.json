@@ -1,0 +1,6 @@
+{
+  "description": "Bind<C>().FromComponentInHierarchy().AsSingle() -> RegisterComponentInHierarchy<C>()",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

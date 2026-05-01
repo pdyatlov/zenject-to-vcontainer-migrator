@@ -1,0 +1,6 @@
+{
+  "description": "Bind<I>().FromMethod(λ).AsSingle() -> Register<I>(λ, Lifetime.Singleton)",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

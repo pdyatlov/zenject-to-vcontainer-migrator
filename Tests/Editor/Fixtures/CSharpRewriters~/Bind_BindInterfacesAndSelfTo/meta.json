@@ -1,0 +1,6 @@
+{
+  "description": "BindInterfacesAndSelfTo<T>().AsSingle() -> Register<T>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf()",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

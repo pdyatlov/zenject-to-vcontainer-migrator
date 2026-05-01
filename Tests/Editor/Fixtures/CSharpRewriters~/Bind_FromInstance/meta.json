@@ -1,0 +1,6 @@
+{
+  "description": "Bind<I>().FromInstance(x) -> RegisterInstance<I>(x)",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

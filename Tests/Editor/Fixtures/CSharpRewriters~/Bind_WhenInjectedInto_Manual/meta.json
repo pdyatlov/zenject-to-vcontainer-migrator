@@ -1,0 +1,6 @@
+{
+  "description": ".WhenInjectedInto / .WhenNotInjectedInto have no VContainer equivalent — emit manual TODO and preserve original chain.",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter"],
+  "expectedManualTodoCategories": ["ConditionalBind"],
+  "extraReferences": []
+}

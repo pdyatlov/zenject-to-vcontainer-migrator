@@ -1,0 +1,6 @@
+{
+  "description": "BindInterfacesAndSelfTo<T>().FromInstance(x).AsSingle() -> RegisterInstance(x).AsImplementedInterfaces().AsSelf()",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

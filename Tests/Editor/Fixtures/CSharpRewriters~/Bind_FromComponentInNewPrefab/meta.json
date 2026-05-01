@@ -1,0 +1,6 @@
+{
+  "description": "Bind<C>().FromComponentInNewPrefab(p).AsSingle() -> RegisterComponentInNewPrefab<C>(p, Lifetime.Singleton)",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

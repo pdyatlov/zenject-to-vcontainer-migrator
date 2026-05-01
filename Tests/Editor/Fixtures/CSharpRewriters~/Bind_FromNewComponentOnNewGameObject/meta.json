@@ -1,0 +1,6 @@
+{
+  "description": "Bind<C>().FromNewComponentOnNewGameObject().AsSingle() -> RegisterComponentOnNewGameObject<C>(Lifetime.Singleton, \"C\")",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}
