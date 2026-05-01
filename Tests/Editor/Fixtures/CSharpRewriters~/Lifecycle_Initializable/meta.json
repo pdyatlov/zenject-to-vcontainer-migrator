@@ -1,0 +1,6 @@
+{
+  "description": "IInitializable -> IStartable; Initialize() -> Start(); using VContainer.Unity; added.",
+  "rewriters": ["UsingDirectiveRewriter", "TickableInitializableRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}
