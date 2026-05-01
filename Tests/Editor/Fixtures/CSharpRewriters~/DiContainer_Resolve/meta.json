@@ -1,0 +1,6 @@
+{
+  "description": "DiContainer field/parameter type renamed to IObjectResolver; Resolve<T>() unchanged.",
+  "rewriters": ["UsingDirectiveRewriter", "DiContainerUsageRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}
