@@ -1,4 +1,4 @@
-using Zenject2VContainer.Core.Scanner;
+using Zenject2VContainer.Core;
 
 namespace Zenject2VContainer.Manifest {
     public sealed class StubZenjectRemover : IZenjectRemover {
