@@ -42,6 +42,7 @@ namespace Zenject {
         public T Instantiate<T>() => default;
         public BindStatement<T> Bind<T>() => default;
         public BindStatement<T> BindInterfacesTo<T>() => default;
+        public BindStatement<T> BindInterfacesAndSelfTo<T>() => default;
     }
     public class BindStatement<T> {
         public BindStatement<T> To<U>() => default;
@@ -51,7 +52,10 @@ namespace Zenject {
         public BindStatement<T> FromInstance(object o) => default;
         public BindStatement<T> WithId(string id) => default;
     }
-    public abstract class Installer {}
+    public abstract class Installer {
+        public DiContainer Container { get; }
+        public abstract void InstallBindings();
+    }
     public abstract class MonoInstaller : UnityEngine.MonoBehaviour {
         public DiContainer Container { get; }
         public abstract void InstallBindings();
