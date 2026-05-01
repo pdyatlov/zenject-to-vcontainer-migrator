@@ -25,6 +25,11 @@ namespace Zenject2VContainer.CSharp {
                 // and IsZenjectSymbol returns null for everything.
                 currentTree = ApplyIfIncluded<InjectAttributeRewriter>(compilation, currentTree, perFileFindings);
                 currentTree = ApplyIfIncluded<BindToAsRewriter>(compilation, currentTree, perFileFindings);
+                currentTree = ApplyIfIncluded<InstallerRewriter>(compilation, currentTree, perFileFindings);
+                currentTree = ApplyIfIncluded<TickableInitializableRewriter>(compilation, currentTree, perFileFindings);
+                currentTree = ApplyIfIncluded<FactoryRewriter>(compilation, currentTree, perFileFindings);
+                currentTree = ApplyIfIncluded<SubContainerRewriter>(compilation, currentTree, perFileFindings);
+                currentTree = ApplyIfIncluded<DiContainerUsageRewriter>(compilation, currentTree, perFileFindings);
                 currentTree = ApplyIfIncluded<UsingDirectiveRewriter>(compilation, currentTree, perFileFindings);
 
                 var originalRoot = originalTree.GetRoot();
