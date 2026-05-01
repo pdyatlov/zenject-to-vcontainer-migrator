@@ -1,0 +1,12 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2006:
+--- !u!1 &111111
+GameObject:
+  m_ObjectHideFlags: 0
+  m_Component:
+  - component: {fileID: 222222}
+  m_Name: Context
+--- !u!114 &222222
+MonoBehaviour:
+  m_Script: {fileID: 11500000, guid: 89715ad69b973a14899afa2c6730b30b, type: 3}
+  m_Name:
