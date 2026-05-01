@@ -18,9 +18,9 @@ namespace Zenject2VContainer.Tests {
                 "extenject-upm.json"));
 
             var stubRefs = new[] {
-                Path.Combine(PkgRoot, "Tests", "Editor", "References", "UnityEngine.dll"),
-                Path.Combine(PkgRoot, "Tests", "Editor", "References", "Zenject.dll"),
-                Path.Combine(PkgRoot, "Tests", "Editor", "References", "VContainer.dll")
+                Path.Combine(PkgRoot, "Tests", "Editor", "References~", "UnityEngine.dll"),
+                Path.Combine(PkgRoot, "Tests", "Editor", "References~", "Zenject.dll"),
+                Path.Combine(PkgRoot, "Tests", "Editor", "References~", "VContainer.dll")
             };
 
             const string src =

@@ -10,7 +10,7 @@ namespace Zenject2VContainer.Tests {
     public class SymbolMatchersTests {
         private static string[] StubRefs() {
             var root = Path.Combine(Application.dataPath, "..", "Packages",
-                "com.zenject2vcontainer.migrator", "Tests", "Editor", "References");
+                "com.zenject2vcontainer.migrator", "Tests", "Editor", "References~");
             return new[] {
                 Path.Combine(root, "UnityEngine.dll"),
                 Path.Combine(root, "Zenject.dll"),

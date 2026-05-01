@@ -9,7 +9,7 @@ namespace Zenject2VContainer.Tests {
         [Test]
         public void Builds_Compilation_From_Single_Source_String_With_Stub_References() {
             var refsRoot = Path.Combine(Application.dataPath, "..", "Packages",
-                "com.zenject2vcontainer.migrator", "Tests", "Editor", "References");
+                "com.zenject2vcontainer.migrator", "Tests", "Editor", "References~");
 
             var refPaths = new[] {
                 Path.Combine(refsRoot, "UnityEngine.dll"),
