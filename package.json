@@ -1,0 +1,19 @@
+{
+  "name": "com.zenject2vcontainer.migrator",
+  "version": "0.1.0",
+  "displayName": "Zenject2VContainer Migrator",
+  "description": "Editor tool that migrates Unity projects from Zenject / Extenject to VContainer.",
+  "unity": "2021.3",
+  "keywords": [
+    "zenject",
+    "extenject",
+    "vcontainer",
+    "dependency-injection",
+    "migration",
+    "editor-tool"
+  ],
+  "author": {
+    "name": "Zenject2VContainer contributors"
+  },
+  "dependencies": {}
+}

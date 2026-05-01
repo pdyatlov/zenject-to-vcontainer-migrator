@@ -1,0 +1,15 @@
+{
+  "name": "Zenject2VContainer.Editor",
+  "rootNamespace": "Zenject2VContainer",
+  "references": [],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
