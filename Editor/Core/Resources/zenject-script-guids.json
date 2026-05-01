@@ -1,0 +1,10 @@
+{
+  "scripts": [
+    { "name": "SceneContext",       "guid": "89715ad69b973a14899afa2c6730b30b" },
+    { "name": "ProjectContext",     "guid": "a4e6589720da476459dc6dd71624b071" },
+    { "name": "GameObjectContext",  "guid": "08eca9f7688a0a24685b89133b020c8e" },
+    { "name": "ZenjectBinding",     "guid": "0166d8ff8d905b048b2448179e1f5d11" },
+    { "name": "MonoInstaller",      "guid": "724ff9f6c80e0b044b7db58730dc6075" }
+  ],
+  "notes": "GUIDs sampled from Extenject 9.2.0 (Mathijs-Bakker fork). M6 ships a regeneration script."
+}
