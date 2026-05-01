@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Zenject2VContainer.Core;
 using Zenject2VContainer.CSharp.Rewriters;
 
@@ -15,35 +15,21 @@ namespace Zenject2VContainer.CSharp {
 
         public IReadOnlyList<FileChange> Run(CSharpCompilation compilation) {
             var changes = new List<FileChange>();
-            foreach (var tree in compilation.SyntaxTrees) {
-                var model = compilation.GetSemanticModel(tree);
-                var root = tree.GetRoot();
-                var current = root;
+            foreach (var originalTree in compilation.SyntaxTrees) {
+                var currentTree = originalTree;
                 var perFileFindings = new List<Finding>();
 
-                if (Includes(nameof(UsingDirectiveRewriter))) {
-                    var r = new UsingDirectiveRewriter();
-                    current = r.Apply(current, model, tree);
-                    perFileFindings.AddRange(r.Findings);
-                }
+                currentTree = ApplyIfIncluded<UsingDirectiveRewriter>(compilation, currentTree, perFileFindings);
+                currentTree = ApplyIfIncluded<InjectAttributeRewriter>(compilation, currentTree, perFileFindings);
+                currentTree = ApplyIfIncluded<BindToAsRewriter>(compilation, currentTree, perFileFindings);
 
-                if (Includes(nameof(InjectAttributeRewriter))) {
-                    var r = new InjectAttributeRewriter();
-                    current = r.Apply(current, model, tree);
-                    perFileFindings.AddRange(r.Findings);
-                }
-
-                if (Includes(nameof(BindToAsRewriter))) {
-                    var r = new BindToAsRewriter();
-                    current = r.Apply(current, model, tree);
-                    perFileFindings.AddRange(r.Findings);
-                }
-
-                if (current != root) {
+                var originalRoot = originalTree.GetRoot();
+                var currentRoot = currentTree.GetRoot();
+                if (currentRoot != originalRoot) {
                     var fc = new FileChange {
-                        OriginalPath = tree.FilePath,
-                        OriginalText = root.ToFullString(),
-                        NewText = current.ToFullString(),
+                        OriginalPath = originalTree.FilePath,
+                        OriginalText = originalRoot.ToFullString(),
+                        NewText = currentRoot.ToFullString(),
                         Category = FileChangeCategory.CSharp,
                         Confidence = ChangeConfidence.High
                     };
@@ -52,6 +38,25 @@ namespace Zenject2VContainer.CSharp {
                 }
             }
             return changes;
+        }
+
+        // Each rewriter must run against a SemanticModel bound to the CURRENT tree —
+        // a previous rewriter may have mutated the syntax. Otherwise GetSymbolInfo
+        // throws "Syntax node is not within syntax tree".
+        private SyntaxTree ApplyIfIncluded<TRewriter>(
+                CSharpCompilation baseCompilation,
+                SyntaxTree currentTree,
+                List<Finding> findings) where TRewriter : RewriterBase, new() {
+            if (!Includes(typeof(TRewriter).Name)) return currentTree;
+
+            var freshCompilation = baseCompilation.RemoveAllSyntaxTrees().AddSyntaxTrees(currentTree);
+            var model = freshCompilation.GetSemanticModel(currentTree);
+            var rewriter = new TRewriter();
+            var newRoot = rewriter.Apply(currentTree.GetRoot(), model, currentTree);
+            findings.AddRange(rewriter.Findings);
+
+            if (newRoot == currentTree.GetRoot()) return currentTree;
+            return currentTree.WithRootAndOptions(newRoot, currentTree.Options);
         }
 
         private bool Includes(string name) {
