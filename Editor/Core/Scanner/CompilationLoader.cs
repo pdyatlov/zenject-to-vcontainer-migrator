@@ -17,17 +17,24 @@ namespace Zenject2VContainer.Core.Scanner {
             }
 
             var refs = new List<MetadataReference>();
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            // Dedupe by simple assembly name too, so a stub DLL with the same simple
+            // name as a real loaded assembly (e.g. our Zenject.dll stub vs. the real
+            // Zenject loaded by Unity) does not produce duplicate type definitions.
+            var seenSimpleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             void Add(string path) {
                 if (string.IsNullOrEmpty(path)) return;
                 if (!File.Exists(path)) return;
-                if (!seen.Add(path)) return;
+                if (!seenPaths.Add(path)) return;
+                var simpleName = Path.GetFileNameWithoutExtension(path);
+                if (!seenSimpleNames.Add(simpleName)) return;
                 refs.Add(MetadataReference.CreateFromFile(path));
             }
 
-            // Include every loaded runtime assembly so referenced types like System.Attribute,
-            // type-forwarded BCL surface, and Unity APIs all resolve. AppDomain enumeration is
-            // the canonical way to get the right set in the Unity Editor.
+            // AppDomain assemblies are added first so they win the simple-name dedupe.
+            // This means: if Unity has already loaded the real Zenject, our stub gets
+            // skipped — and the test compilation resolves Zenject types against the
+            // real assembly, which is what tests assert against.
             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies()) {
                 if (asm.IsDynamic) continue;
                 try { Add(asm.Location); } catch { /* dynamic / in-memory assemblies have no Location */ }
