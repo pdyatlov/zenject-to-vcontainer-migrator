@@ -1,0 +1,6 @@
+{
+  "description": "Installer<T> POCO -> IInstaller; InstallBindings replaced with Install(IContainerBuilder builder), no legacy stub.",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter", "InstallerRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

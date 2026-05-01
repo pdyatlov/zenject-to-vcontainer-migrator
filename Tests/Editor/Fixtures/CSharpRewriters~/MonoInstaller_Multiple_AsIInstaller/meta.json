@@ -1,0 +1,6 @@
+{
+  "description": "MonoInstaller -> add IInstaller; legacy InstallBindings stub + new Install(IContainerBuilder builder).",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter", "InstallerRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

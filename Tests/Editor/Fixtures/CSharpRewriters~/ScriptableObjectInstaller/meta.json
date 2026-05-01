@@ -1,0 +1,6 @@
+{
+  "description": "ScriptableObjectInstaller -> ScriptableObject + IInstaller; legacy InstallBindings stub + Install(IContainerBuilder builder).",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter", "InstallerRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}
