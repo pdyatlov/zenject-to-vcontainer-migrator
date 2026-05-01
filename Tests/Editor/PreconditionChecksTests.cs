@@ -35,5 +35,23 @@ namespace Zenject2VContainer.Tests {
             var result = PreconditionChecks.CheckGitState(isRepo: true, isDirty: false);
             Assert.AreEqual(PreconditionResult.Severity.Pass, result.Result);
         }
+
+        [Test] public void PlayMode_blocked_when_playing() {
+            var r = PreconditionChecks.CheckPlayMode(isPlaying: true);
+            Assert.AreEqual(PreconditionResult.Severity.Block, r.Result);
+            Assert.AreEqual("PLAY_MODE", r.Code);
+        }
+        [Test] public void PlayMode_passes_when_not_playing() {
+            Assert.AreEqual(PreconditionResult.Severity.Pass, PreconditionChecks.CheckPlayMode(isPlaying: false).Result);
+        }
+        [Test] public void Compiling_blocked() {
+            Assert.AreEqual(PreconditionResult.Severity.Block, PreconditionChecks.CheckCompiling(isCompiling: true).Result);
+        }
+        [Test] public void ProjectCompiles_blocked_when_broken() {
+            Assert.AreEqual(PreconditionResult.Severity.Block, PreconditionChecks.CheckProjectCompiles(hasCompileErrors: true).Result);
+        }
+        [Test] public void AssetSerialization_blocked_when_not_force_text() {
+            Assert.AreEqual(PreconditionResult.Severity.Block, PreconditionChecks.CheckAssetSerialization(isForceText: false).Result);
+        }
     }
 }
