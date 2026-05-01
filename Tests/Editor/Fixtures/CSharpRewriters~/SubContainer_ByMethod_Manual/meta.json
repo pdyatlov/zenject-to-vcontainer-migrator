@@ -1,0 +1,6 @@
+{
+  "description": "FromSubContainerResolve chain emits manual TODO [ComplexSubContainer]; original chain preserved.",
+  "rewriters": ["UsingDirectiveRewriter", "SubContainerRewriter"],
+  "expectedManualTodoCategories": ["ComplexSubContainer"],
+  "extraReferences": []
+}
