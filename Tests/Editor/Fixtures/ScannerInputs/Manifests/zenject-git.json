@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "com.mathijs-bakker.extenject": "https://github.com/Mathijs-Bakker/Extenject.git#9.3.0"
+  }
+}
