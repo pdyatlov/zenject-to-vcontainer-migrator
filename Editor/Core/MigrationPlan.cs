@@ -28,5 +28,7 @@ namespace Zenject2VContainer.Core {
     public sealed class MigrationPlan {
         public List<FileChange> Changes = new List<FileChange>();
         public List<Finding> Unsupported = new List<Finding>();
+
+        public static MigrationPlan Empty() => new MigrationPlan();
     }
 }
