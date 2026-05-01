@@ -5,10 +5,67 @@ using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEngine;
 using Zenject2VContainer.Core.Scanner;
+using Zenject2VContainer.CSharp;
+using Zenject2VContainer.Yaml;
 
 namespace Zenject2VContainer.Core {
     public static class MigrationPipeline {
         public const string ToolVersion = "0.1.0";
+
+        public static MigrationPlan RunCSharpHeadless() {
+            var compilation = BuildHostCompilation();
+            var pipeline = new RewritePipeline(new[] { "*" });
+            var changes = pipeline.Run(compilation);
+            var plan = new MigrationPlan();
+            plan.Changes.AddRange(changes);
+            foreach (var change in changes) {
+                plan.Unsupported.AddRange(change.RelatedFindings);
+            }
+            return plan;
+        }
+
+        public static MigrationPlan RunYamlHeadless() {
+            var projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+            var assetsRoot = Path.Combine(projectRoot, "Assets");
+            var zenjectTable = ZenjectScriptGuidTable.LoadBundled();
+            var lookup = ScriptGuidLookup.Resolve();
+            var migrator = new AssetMigrator(zenjectTable, lookup);
+            return migrator.MigrateAssetsDirectory(assetsRoot);
+        }
+
+        public static MigrationPlan RunFullHeadless() {
+            var csharp = RunCSharpHeadless();
+            var yaml = RunYamlHeadless();
+            var combined = new MigrationPlan();
+            combined.Changes.AddRange(csharp.Changes);
+            combined.Changes.AddRange(yaml.Changes);
+            combined.Unsupported.AddRange(csharp.Unsupported);
+            combined.Unsupported.AddRange(yaml.Unsupported);
+            return combined;
+        }
+
+        private static Microsoft.CodeAnalysis.CSharp.CSharpCompilation BuildHostCompilation() {
+            var projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+            var sources = new List<(string, string)>();
+            var refs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var scriptAssembliesDir = Path.Combine(projectRoot, "Library", "ScriptAssemblies");
+            foreach (var asm in CompilationPipeline.GetAssemblies(AssembliesType.Editor)) {
+                if (asm.name.StartsWith("Zenject2VContainer", StringComparison.Ordinal)) continue;
+                if (IsThirdPartyScanIgnoredAssembly(asm.name)) {
+                    var compiledDll = Path.Combine(scriptAssembliesDir, asm.name + ".dll");
+                    if (File.Exists(compiledDll)) refs.Add(compiledDll);
+                } else {
+                    foreach (var src in asm.sourceFiles) {
+                        if (!File.Exists(src)) continue;
+                        sources.Add((src, File.ReadAllText(src)));
+                    }
+                }
+                foreach (var r in asm.compiledAssemblyReferences) {
+                    if (File.Exists(r)) refs.Add(r);
+                }
+            }
+            return CompilationLoader.BuildFromSources("HostCompilation", sources, refs);
+        }
 
         public static ZenjectUsageReport RunScanHeadless() {
             var projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
