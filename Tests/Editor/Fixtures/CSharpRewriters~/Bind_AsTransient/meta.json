@@ -1,0 +1,6 @@
+{
+  "description": "Bind<I>().To<C>().AsTransient() -> Register<C>(Lifetime.Transient).As<I>()",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

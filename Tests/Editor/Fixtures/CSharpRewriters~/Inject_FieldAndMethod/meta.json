@@ -1,0 +1,6 @@
+{
+  "description": "[Inject] preserved verbatim; only the using namespace changes.",
+  "rewriters": ["UsingDirectiveRewriter", "InjectAttributeRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

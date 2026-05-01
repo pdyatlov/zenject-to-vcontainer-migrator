@@ -1,0 +1,6 @@
+{
+  "description": "[InjectOptional] flagged as manual TODO with original code preserved.",
+  "rewriters": ["UsingDirectiveRewriter", "InjectAttributeRewriter"],
+  "expectedManualTodoCategories": ["InjectOptional"],
+  "extraReferences": []
+}

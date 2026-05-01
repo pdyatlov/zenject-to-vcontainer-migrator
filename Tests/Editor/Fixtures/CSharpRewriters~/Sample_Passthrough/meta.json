@@ -1,0 +1,6 @@
+{
+  "description": "Source with no Zenject usage must pass through unchanged.",
+  "rewriters": ["*"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

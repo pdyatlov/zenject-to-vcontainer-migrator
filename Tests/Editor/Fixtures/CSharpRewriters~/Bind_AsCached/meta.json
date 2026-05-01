@@ -1,0 +1,6 @@
+{
+  "description": "Bind<I>().To<C>().AsCached() -> Register<C>(Lifetime.Scoped).As<I>()",
+  "rewriters": ["UsingDirectiveRewriter", "BindToAsRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

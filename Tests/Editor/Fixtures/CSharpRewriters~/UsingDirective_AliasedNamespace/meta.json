@@ -1,0 +1,6 @@
+{
+  "description": "Aliased using updates the right-hand side; alias preserved.",
+  "rewriters": ["UsingDirectiveRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}

@@ -1,0 +1,6 @@
+{
+  "description": "Plain using Zenject; replaced by using VContainer;.",
+  "rewriters": ["UsingDirectiveRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}
