@@ -23,7 +23,10 @@ namespace Zenject2VContainer.CSharp.Rewriters {
             foreach (var u in root.Usings) {
                 if (u.Name?.ToString() == "VContainer.Unity") return root;
             }
+            var usingKw = SyntaxFactory.Token(SyntaxKind.UsingKeyword).WithTrailingTrivia(SyntaxFactory.Space);
             var newUsing = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("VContainer.Unity"))
+                .WithUsingKeyword(usingKw)
+                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
                 .WithTrailingTrivia(SyntaxFactory.EndOfLine("\n"));
             return root.AddUsings(newUsing);
         }
