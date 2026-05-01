@@ -1,0 +1,6 @@
+{
+  "description": "PlaceholderFactory<TArg, TOut> -> thin Func<TArg, TOut> wrapper class.",
+  "rewriters": ["UsingDirectiveRewriter", "FactoryRewriter"],
+  "expectedManualTodoCategories": [],
+  "extraReferences": []
+}
