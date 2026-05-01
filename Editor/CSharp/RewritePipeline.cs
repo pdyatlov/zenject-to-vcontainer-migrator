@@ -19,9 +19,13 @@ namespace Zenject2VContainer.CSharp {
                 var currentTree = originalTree;
                 var perFileFindings = new List<Finding>();
 
-                currentTree = ApplyIfIncluded<UsingDirectiveRewriter>(compilation, currentTree, perFileFindings);
+                // Order matters: rewriters that need semantic info on Zenject types must
+                // run BEFORE UsingDirectiveRewriter strips `using Zenject;`. Otherwise the
+                // SemanticModel can no longer resolve MonoInstaller, DiContainer, etc.,
+                // and IsZenjectSymbol returns null for everything.
                 currentTree = ApplyIfIncluded<InjectAttributeRewriter>(compilation, currentTree, perFileFindings);
                 currentTree = ApplyIfIncluded<BindToAsRewriter>(compilation, currentTree, perFileFindings);
+                currentTree = ApplyIfIncluded<UsingDirectiveRewriter>(compilation, currentTree, perFileFindings);
 
                 var originalRoot = originalTree.GetRoot();
                 var currentRoot = currentTree.GetRoot();
