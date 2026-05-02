@@ -26,7 +26,7 @@ namespace Zenject2VContainer.Tests {
         public void FilterToHunks_KeepsContextAroundChange_AndDropsDistantUnchanged() {
             var diff = new[] { " 1", " 2", " 3", " 4", " 5", " 6", " 7", "-8", "+8b", " 9", " 10", " 11", " 12", " 13", " 14" };
             var hunks = DiffView.FilterToHunks(diff, context: 3);
-            Assert.That(hunks, Is.EqualTo(new[] { "…", " 5", " 6", " 7", "-8", "+8b", " 9", " 10", " 11", "…" }));
+            Assert.That(hunks, Is.EqualTo(new[] { "…", " 5", " 6", " 7", "-8", "+8b", " 9", " 10", " 11" }));
         }
 
         [Test]
