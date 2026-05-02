@@ -31,12 +31,12 @@ namespace Zenject2VContainer.CSharp.Rewriters {
 
         private enum InstallerKind { None, MonoInstaller, ScriptableObjectInstaller, GenericInstaller }
 
-        private bool _needsVContainerUnity;
+        private bool _needsUnityEngine;
 
         public override SyntaxNode VisitCompilationUnit(CompilationUnitSyntax node) {
             var visited = (CompilationUnitSyntax)base.VisitCompilationUnit(node);
-            if (_needsVContainerUnity) {
-                visited = UsingDirectiveRewriter.EnsureVContainerUnityUsing(visited);
+            if (_needsUnityEngine) {
+                visited = UsingDirectiveRewriter.EnsureUsing(visited, "UnityEngine");
             }
             return visited;
         }
@@ -46,7 +46,9 @@ namespace Zenject2VContainer.CSharp.Rewriters {
             if (symbol == null) return base.VisitClassDeclaration(node);
             var kind = DetectInstallerKind(symbol);
             if (kind == InstallerKind.None) return base.VisitClassDeclaration(node);
-            if (kind == InstallerKind.MonoInstaller) _needsVContainerUnity = true;
+            if (kind == InstallerKind.MonoInstaller || kind == InstallerKind.ScriptableObjectInstaller) {
+                _needsUnityEngine = true;
+            }
             return TransformInstaller(node, kind) ?? (SyntaxNode)node;
         }
 
@@ -73,7 +75,13 @@ namespace Zenject2VContainer.CSharp.Rewriters {
             BaseListSyntax newBaseList;
             switch (kind) {
                 case InstallerKind.MonoInstaller:
-                    newBaseList = AddIInstallerBase(cls.BaseList);
+                    // VContainer has no MonoInstaller class. Keep the type as a
+                    // MonoBehaviour so it can stay attached to its scene GameObject,
+                    // and add IInstaller so a parent LifetimeScope can pick it up
+                    // via builder.UseInstaller(...). Wiring is the user's job —
+                    // surface it as a manual TODO at the LifetimeScope level.
+                    newBaseList = ReplaceBaseAndAddIInstaller(cls.BaseList,
+                        "MonoInstaller", "MonoBehaviour");
                     break;
                 case InstallerKind.ScriptableObjectInstaller:
                     newBaseList = ReplaceBaseAndAddIInstaller(cls.BaseList,
@@ -90,39 +98,22 @@ namespace Zenject2VContainer.CSharp.Rewriters {
             // Install method aligns with the other class members.
             var siblingIndent = ManualTodoEmitter.ExtractLineIndent(installBindings.GetLeadingTrivia());
             if (string.IsNullOrEmpty(siblingIndent)) siblingIndent = "    ";
-            // Body content is one indent level deeper than its enclosing method.
             var bodyIndent = siblingIndent + "    ";
-            var installMethod = BuildInstallMethod(installBindings.Body, siblingIndent, bodyIndent);
-            var newMembers = new List<MemberDeclarationSyntax>(cls.Members.Count + 1);
+            var installMethod = BuildInstallMethod(installBindings.Body, siblingIndent, bodyIndent)
+                .WithLeadingTrivia(installBindings.GetLeadingTrivia());
 
-            if (kind == InstallerKind.GenericInstaller) {
-                // POCO: no Unity-side caller. Drop legacy InstallBindings stub —
-                // replace it directly with Install method, preserving original leading trivia.
-                installMethod = installMethod.WithLeadingTrivia(installBindings.GetLeadingTrivia());
-                foreach (var m in cls.Members) {
-                    if (m == installBindings) {
-                        newMembers.Add(installMethod);
-                    } else {
-                        newMembers.Add(m);
-                    }
-                }
-            } else {
-                // MonoInstaller / ScriptableObjectInstaller: keep legacy stub for
-                // asset / Unity callsite compatibility.
-                var origParamList = installBindings.ParameterList;
-                var slimParamList = origParamList.WithCloseParenToken(
-                    origParamList.CloseParenToken.WithTrailingTrivia(SyntaxTriviaList.Empty));
-                var legacyMethod = installBindings
-                    .WithParameterList(slimParamList)
-                    .WithBody(BuildLegacyEntryBlock());
-                foreach (var m in cls.Members) {
-                    if (m == installBindings) {
-                        newMembers.Add(legacyMethod);
-                        newMembers.Add(installMethod);
-                    } else {
-                        newMembers.Add(m);
-                    }
-                }
+            // Drop the legacy InstallBindings stub for ALL installer kinds — none of
+            // the new bases (MonoBehaviour / ScriptableObject / nothing) declare
+            // InstallBindings, so `override` would not compile, and there is no
+            // remaining caller. Replace InstallBindings directly with Install.
+            var newMembers = new List<MemberDeclarationSyntax>(cls.Members.Count);
+            foreach (var m in cls.Members) {
+                newMembers.Add(m == installBindings ? installMethod : m);
+            }
+
+            if (kind == InstallerKind.MonoInstaller) {
+                EmitManualTodo(ManualTodoEmitter.InstallerWiring, cls,
+                    "MonoInstaller has been retyped as MonoBehaviour : IInstaller. Wire it into a parent LifetimeScope via builder.UseInstaller(this) or by overriding LifetimeScope.Configure.");
             }
 
             return cls.WithBaseList(newBaseList).WithMembers(SyntaxFactory.List(newMembers));
