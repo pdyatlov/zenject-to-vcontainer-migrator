@@ -25,7 +25,7 @@ namespace Zenject2VContainer.UI {
                 { WizardState.Preview, new PreviewStep() },
                 { WizardState.Apply,   new ApplyStep() },
                 { WizardState.Verify,  new VerifyStep() },
-                { WizardState.Remove,  new RemoveZenjectStep(new StubZenjectRemover()) }
+                { WizardState.Remove,  new RemoveZenjectStep(new ZenjectRemover()) }
             };
         }
 
