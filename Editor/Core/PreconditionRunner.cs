@@ -18,11 +18,15 @@ namespace Zenject2VContainer.Core {
 
     public static class PreconditionRunner {
         public static PreconditionReport Run(InstallationInfo install, bool userOverrodeGitDirty) {
+            // Always re-read the manifest for VContainer presence — the scan report may be stale
+            // (wizard reopen wipes it) or the user may have just installed VContainer between
+            // running scan and pressing Apply. Fall back to the passed install if disk read fails.
+            var freshInstall = DetectInstallFromDisk() ?? install;
             var report = new PreconditionReport();
             report.Results.Add(PreconditionChecks.CheckPlayMode(EditorApplication.isPlayingOrWillChangePlaymode));
             report.Results.Add(PreconditionChecks.CheckCompiling(EditorApplication.isCompiling));
             report.Results.Add(PreconditionChecks.CheckProjectCompiles(HasCompileErrors()));
-            report.Results.Add(PreconditionChecks.CheckVContainerPresence(install));
+            report.Results.Add(PreconditionChecks.CheckVContainerPresence(freshInstall));
             report.Results.Add(PreconditionChecks.CheckAssetSerialization(EditorSettings.serializationMode == SerializationMode.ForceText));
 
             var (isRepo, isDirty) = ProbeGit();
@@ -32,6 +36,17 @@ namespace Zenject2VContainer.Core {
             }
             report.Results.Add(git);
             return report;
+        }
+
+        private static InstallationInfo DetectInstallFromDisk() {
+            try {
+                var projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+                var manifestPath = Path.Combine(projectRoot, "Packages", "manifest.json");
+                if (!File.Exists(manifestPath)) return null;
+                return ZenjectInstallDetector.DetectFromManifestJson(File.ReadAllText(manifestPath));
+            } catch {
+                return null;
+            }
         }
 
         private static bool HasCompileErrors() {
