@@ -61,6 +61,12 @@ namespace Zenject2VContainer.Core {
                 } else {
                     foreach (var src in asm.sourceFiles) {
                         if (!File.Exists(src)) continue;
+                        // Belt-and-braces: even if the asmdef name doesn't match the third-party
+                        // skip-list, files that physically live inside the Zenject / Extenject /
+                        // VContainer install folders are not user code. Skipping here prevents
+                        // the rewriter from touching their tests / samples (those will be wiped
+                        // by M5's removal step anyway).
+                        if (IsThirdPartyVendoredFile(src)) continue;
                         sources.Add((src, File.ReadAllText(src)));
                     }
                 }
@@ -69,6 +75,15 @@ namespace Zenject2VContainer.Core {
                 }
             }
             return CompilationLoader.BuildFromSources("HostCompilation", sources, refs);
+        }
+
+        private static bool IsThirdPartyVendoredFile(string path) {
+            var n = path.Replace('\\', '/');
+            return n.IndexOf("/Plugins/Zenject/", StringComparison.OrdinalIgnoreCase) >= 0
+                || n.IndexOf("/Plugins/Extenject/", StringComparison.OrdinalIgnoreCase) >= 0
+                || n.IndexOf("/Assets/Zenject/", StringComparison.OrdinalIgnoreCase) >= 0
+                || n.IndexOf("/Assets/Extenject/", StringComparison.OrdinalIgnoreCase) >= 0
+                || n.IndexOf("/VContainer/", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         public static ZenjectUsageReport RunScanHeadless(IMigrationProgress progress = null) {
