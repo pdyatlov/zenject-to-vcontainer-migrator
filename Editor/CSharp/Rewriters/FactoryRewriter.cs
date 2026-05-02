@@ -21,7 +21,9 @@ namespace Zenject2VContainer.CSharp.Rewriters {
         public override string Name => nameof(FactoryRewriter);
 
         public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {
-            // Rewrite a class whose direct base is Zenject's PlaceholderFactory<TArg, TOut>.
+            // Rewrite a class whose direct base is Zenject's PlaceholderFactory<...>.
+            // Supports 1..N type arguments — the last is the output type, all preceding
+            // are arguments fed into Func<...>.
             if (node.BaseList != null) {
                 foreach (var bt in node.BaseList.Types) {
                     if (!(bt.Type is GenericNameSyntax gn)) continue;
@@ -30,7 +32,7 @@ namespace Zenject2VContainer.CSharp.Rewriters {
                     var sym = Model.GetSymbolInfo(gn).Symbol as INamedTypeSymbol;
                     if (sym == null || !SymbolMatchers.IsZenjectSymbol(sym)) continue;
                     if (sym.Name != "PlaceholderFactory") continue;
-                    if (gn.TypeArgumentList.Arguments.Count != 2) continue;
+                    if (gn.TypeArgumentList.Arguments.Count < 1) continue;
 
                     return BuildWrapperClass(node, gn);
                 }
@@ -43,8 +45,11 @@ namespace Zenject2VContainer.CSharp.Rewriters {
         // TODO [CustomFactory] alongside the other unsupported chain heads.
 
         private static ClassDeclarationSyntax BuildWrapperClass(ClassDeclarationSyntax cls, GenericNameSyntax placeholderBase) {
-            var tArg = placeholderBase.TypeArgumentList.Arguments[0];
-            var tOut = placeholderBase.TypeArgumentList.Arguments[1];
+            var typeArgs = placeholderBase.TypeArgumentList.Arguments;
+            int argCount = typeArgs.Count - 1; // last arg is the output type
+            var tOut = typeArgs[typeArgs.Count - 1];
+            var tArgs = new List<TypeSyntax>();
+            for (int i = 0; i < argCount; i++) tArgs.Add(typeArgs[i]);
 
             // Strip the PlaceholderFactory<TArg, TOut> base list. Removing the base
             // list also drops its trivia (the `\n` after `>` lived there), so set
@@ -62,14 +67,16 @@ namespace Zenject2VContainer.CSharp.Rewriters {
                         SyntaxKind.CloseBraceToken,
                         SyntaxFactory.TriviaList(SyntaxFactory.EndOfLine("\n"))));
 
-            // Build the wrapper members.
+            // Build Func<TArg1, ..., TArgN, TOut>. Zero-arg factories produce just Func<TOut>.
+            var funcTypeArgs = new List<SyntaxNodeOrToken>();
+            for (int i = 0; i < tArgs.Count; i++) {
+                funcTypeArgs.Add(tArgs[i].WithoutTrivia());
+                funcTypeArgs.Add(SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space));
+            }
+            funcTypeArgs.Add(tOut.WithoutTrivia());
             var funcType = SyntaxFactory.GenericName(SyntaxFactory.Identifier("Func"))
                 .WithTypeArgumentList(SyntaxFactory.TypeArgumentList(
-                    SyntaxFactory.SeparatedList<TypeSyntax>(new SyntaxNodeOrToken[] {
-                        tArg.WithoutTrivia(),
-                        SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space),
-                        tOut.WithoutTrivia()
-                    })));
+                    SyntaxFactory.SeparatedList<TypeSyntax>(funcTypeArgs)));
 
             var memberLeading = SyntaxFactory.TriviaList(
                 SyntaxFactory.EndOfLine("\n"),
@@ -110,24 +117,38 @@ namespace Zenject2VContainer.CSharp.Rewriters {
                 .WithBody(ctorBody)
                 .WithLeadingTrivia(memberLeading);
 
-            // public TOut Create(TArg arg) => _factory(arg);
+            // public TOut Create(TArg1 a1, ..., TArgN aN) => _factory(a1, ..., aN);
             var arrowToken = SyntaxFactory.Token(SyntaxKind.EqualsGreaterThanToken)
                 .WithLeadingTrivia(SyntaxFactory.Space)
                 .WithTrailingTrivia(SyntaxFactory.Space);
+
+            var createParamNodes = new List<SyntaxNodeOrToken>();
+            var invokeArgNodes = new List<SyntaxNodeOrToken>();
+            for (int i = 0; i < tArgs.Count; i++) {
+                var name = "a" + (i + 1);
+                createParamNodes.Add(SyntaxFactory.Parameter(SyntaxFactory.Identifier(name))
+                    .WithType(tArgs[i].WithTrailingTrivia(SyntaxFactory.Space)));
+                invokeArgNodes.Add(SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name)));
+                if (i < tArgs.Count - 1) {
+                    var comma = SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space);
+                    createParamNodes.Add(comma);
+                    invokeArgNodes.Add(comma);
+                }
+            }
+            var createParams = SyntaxFactory.ParameterList(
+                SyntaxFactory.SeparatedList<ParameterSyntax>(createParamNodes));
+            var invokeArgs = SyntaxFactory.ArgumentList(
+                SyntaxFactory.SeparatedList<ArgumentSyntax>(invokeArgNodes));
+
             var createMethod = SyntaxFactory.MethodDeclaration(
                     tOut.WithTrailingTrivia(SyntaxFactory.Space),
                     SyntaxFactory.Identifier("Create"))
                 .WithModifiers(SyntaxFactory.TokenList(
                     SyntaxFactory.Token(SyntaxKind.PublicKeyword).WithTrailingTrivia(SyntaxFactory.Space)))
-                .WithParameterList(SyntaxFactory.ParameterList(
-                    SyntaxFactory.SingletonSeparatedList(
-                        SyntaxFactory.Parameter(SyntaxFactory.Identifier("arg"))
-                            .WithType(tArg.WithTrailingTrivia(SyntaxFactory.Space)))))
+                .WithParameterList(createParams)
                 .WithExpressionBody(SyntaxFactory.ArrowExpressionClause(arrowToken,
                     SyntaxFactory.InvocationExpression(SyntaxFactory.IdentifierName("_factory"))
-                        .WithArgumentList(SyntaxFactory.ArgumentList(
-                            SyntaxFactory.SingletonSeparatedList(
-                                SyntaxFactory.Argument(SyntaxFactory.IdentifierName("arg")))))))
+                        .WithArgumentList(invokeArgs)))
                 .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
                 .WithLeadingTrivia(memberLeading);
 
