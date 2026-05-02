@@ -20,6 +20,16 @@ namespace Zenject2VContainer.CSharp.Rewriters {
     public sealed class FactoryRewriter : RewriterBase {
         public override string Name => nameof(FactoryRewriter);
 
+        private bool _needsSystem;
+
+        public override SyntaxNode VisitCompilationUnit(CompilationUnitSyntax node) {
+            var visited = (CompilationUnitSyntax)base.VisitCompilationUnit(node);
+            if (_needsSystem) {
+                visited = UsingDirectiveRewriter.EnsureUsing(visited, "System");
+            }
+            return visited;
+        }
+
         public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {
             // Rewrite a class whose direct base is Zenject's PlaceholderFactory<...>.
             // Supports 1..N type arguments — the last is the output type, all preceding
@@ -34,6 +44,7 @@ namespace Zenject2VContainer.CSharp.Rewriters {
                     if (sym.Name != "PlaceholderFactory") continue;
                     if (gn.TypeArgumentList.Arguments.Count < 1) continue;
 
+                    _needsSystem = true;
                     return BuildWrapperClass(node, gn);
                 }
             }

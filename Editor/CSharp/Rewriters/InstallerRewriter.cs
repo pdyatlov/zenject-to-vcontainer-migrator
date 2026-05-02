@@ -32,11 +32,15 @@ namespace Zenject2VContainer.CSharp.Rewriters {
         private enum InstallerKind { None, MonoInstaller, ScriptableObjectInstaller, GenericInstaller }
 
         private bool _needsUnityEngine;
+        private bool _needsVContainerUnity;
 
         public override SyntaxNode VisitCompilationUnit(CompilationUnitSyntax node) {
             var visited = (CompilationUnitSyntax)base.VisitCompilationUnit(node);
             if (_needsUnityEngine) {
                 visited = UsingDirectiveRewriter.EnsureUsing(visited, "UnityEngine");
+            }
+            if (_needsVContainerUnity) {
+                visited = UsingDirectiveRewriter.EnsureUsing(visited, "VContainer.Unity");
             }
             return visited;
         }
@@ -46,6 +50,9 @@ namespace Zenject2VContainer.CSharp.Rewriters {
             if (symbol == null) return base.VisitClassDeclaration(node);
             var kind = DetectInstallerKind(symbol);
             if (kind == InstallerKind.None) return base.VisitClassDeclaration(node);
+            // IInstaller lives in VContainer.Unity, not VContainer — every installer
+            // shape needs that using.
+            _needsVContainerUnity = true;
             if (kind == InstallerKind.MonoInstaller || kind == InstallerKind.ScriptableObjectInstaller) {
                 _needsUnityEngine = true;
             }
