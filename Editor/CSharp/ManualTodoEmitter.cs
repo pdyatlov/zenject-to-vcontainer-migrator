@@ -15,6 +15,7 @@ namespace Zenject2VContainer.CSharp {
         public const string Decorator = "Decorator";
         public const string CustomFactory = "CustomFactory";
         public const string CustomDiContainerExtension = "CustomDiContainerExtension";
+        public const string LifecycleStartCollision = "LifecycleStartCollision";
 
         public static SyntaxTriviaList Build(string category, string reason, string docLink, string indent = "") {
             var lines = new[] {

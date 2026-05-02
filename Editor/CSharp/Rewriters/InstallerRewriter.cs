@@ -31,11 +31,22 @@ namespace Zenject2VContainer.CSharp.Rewriters {
 
         private enum InstallerKind { None, MonoInstaller, ScriptableObjectInstaller, GenericInstaller }
 
+        private bool _needsVContainerUnity;
+
+        public override SyntaxNode VisitCompilationUnit(CompilationUnitSyntax node) {
+            var visited = (CompilationUnitSyntax)base.VisitCompilationUnit(node);
+            if (_needsVContainerUnity) {
+                visited = UsingDirectiveRewriter.EnsureVContainerUnityUsing(visited);
+            }
+            return visited;
+        }
+
         public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {
             var symbol = Model.GetDeclaredSymbol(node) as INamedTypeSymbol;
             if (symbol == null) return base.VisitClassDeclaration(node);
             var kind = DetectInstallerKind(symbol);
             if (kind == InstallerKind.None) return base.VisitClassDeclaration(node);
+            if (kind == InstallerKind.MonoInstaller) _needsVContainerUnity = true;
             return TransformInstaller(node, kind) ?? (SyntaxNode)node;
         }
 
