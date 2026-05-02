@@ -145,12 +145,19 @@ namespace Zenject2VContainer.Yaml {
         // template FileChanges when the corresponding script does not yet exist
         // in the host project. The user compiles those, re-runs migration, and
         // the second pass completes the asset GUID swap.
-        public MigrationPlan MigrateAssetsDirectory(string assetsRoot) {
+        public MigrationPlan MigrateAssetsDirectory(string assetsRoot, IMigrationProgress progress = null) {
+            progress = progress ?? NullMigrationProgress.Instance;
             var plan = new MigrationPlan();
             if (!Directory.Exists(assetsRoot)) return plan;
+            var files = new List<string>();
             foreach (var path in Directory.EnumerateFiles(assetsRoot, "*", SearchOption.AllDirectories)) {
                 var ext = Path.GetExtension(path);
-                if (ext != ".unity" && ext != ".prefab" && ext != ".asset") continue;
+                if (ext == ".unity" || ext == ".prefab" || ext == ".asset") files.Add(path);
+            }
+            int total = files.Count;
+            for (int i = 0; i < total; i++) {
+                var path = files[i];
+                progress.Report("Migrating YAML assets", $"{i + 1}/{total}: {Path.GetFileName(path)}", total > 0 ? (float)(i + 1) / total : 1f);
                 var text = File.ReadAllText(path);
                 var result = MigrateAssetText(path, text);
                 if (result.Change != null) plan.Changes.Add(result.Change);

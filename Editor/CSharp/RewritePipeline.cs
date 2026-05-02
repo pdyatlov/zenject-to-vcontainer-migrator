@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Zenject2VContainer.Core;
@@ -13,9 +14,16 @@ namespace Zenject2VContainer.CSharp {
             _rewriterFilter = rewriterFilter ?? new[] { "*" };
         }
 
-        public IReadOnlyList<FileChange> Run(CSharpCompilation compilation) {
+        public IReadOnlyList<FileChange> Run(CSharpCompilation compilation, IMigrationProgress progress = null) {
+            progress = progress ?? NullMigrationProgress.Instance;
             var changes = new List<FileChange>();
-            foreach (var originalTree in compilation.SyntaxTrees) {
+            var trees = compilation.SyntaxTrees.ToArray();
+            int total = trees.Length;
+            int idx = 0;
+            foreach (var originalTree in trees) {
+                idx++;
+                var fileName = string.IsNullOrEmpty(originalTree.FilePath) ? "<in-memory>" : System.IO.Path.GetFileName(originalTree.FilePath);
+                progress.Report("Migrating C#", $"{idx}/{total}: {fileName}", total > 0 ? (float)idx / total : 1f);
                 var currentTree = originalTree;
                 var perFileFindings = new List<Finding>();
 

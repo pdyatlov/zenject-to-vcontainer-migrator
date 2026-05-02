@@ -19,11 +19,15 @@ namespace Zenject2VContainer.UI.Steps {
 
             using (new EditorGUILayout.HorizontalScope()) {
                 if (GUILayout.Button("Build C# plan")) {
-                    ctx.CSharpPlan = MigrationPipeline.RunCSharpHeadless();
+                    var p = new EditorMigrationProgress();
+                    try { ctx.CSharpPlan = MigrationPipeline.RunCSharpHeadless(p); }
+                    finally { p.Clear(); }
                     ctx.Log.Info("Preview.CSharp", $"{ctx.CSharpPlan.Changes.Count} files / {ctx.CSharpPlan.Unsupported.Count} findings");
                 }
                 if (GUILayout.Button("Build YAML plan")) {
-                    ctx.YamlPlan = MigrationPipeline.RunYamlHeadless();
+                    var p = new EditorMigrationProgress();
+                    try { ctx.YamlPlan = MigrationPipeline.RunYamlHeadless(p); }
+                    finally { p.Clear(); }
                     ctx.Log.Info("Preview.Yaml", $"{ctx.YamlPlan.Changes.Count} assets / {ctx.YamlPlan.Unsupported.Count} findings");
                 }
             }

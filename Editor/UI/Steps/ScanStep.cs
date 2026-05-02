@@ -13,7 +13,12 @@ namespace Zenject2VContainer.UI.Steps {
 
             if (GUILayout.Button("Run scan")) {
                 ctx.Log.Info("Scan", "Starting scan…");
-                ctx.ScanReport = MigrationPipeline.RunScanHeadless();
+                var p = new EditorMigrationProgress();
+                try {
+                    ctx.ScanReport = MigrationPipeline.RunScanHeadless(p);
+                } finally {
+                    p.Clear();
+                }
                 ctx.Log.Info("Scan", $"Done. C# findings: {ctx.ScanReport.CSharpFindings.Count}, asset findings: {ctx.ScanReport.AssetFindings.Count}, unsupported: {ctx.ScanReport.Unsupported.Count}");
             }
 

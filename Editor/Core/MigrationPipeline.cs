@@ -12,10 +12,12 @@ namespace Zenject2VContainer.Core {
     public static class MigrationPipeline {
         public const string ToolVersion = "0.1.0";
 
-        public static MigrationPlan RunCSharpHeadless() {
+        public static MigrationPlan RunCSharpHeadless(IMigrationProgress progress = null) {
+            progress = progress ?? NullMigrationProgress.Instance;
+            progress.Report("Migrating C#", "Building host compilation…", 0f);
             var compilation = BuildHostCompilation();
             var pipeline = new RewritePipeline(new[] { "*" });
-            var changes = pipeline.Run(compilation);
+            var changes = pipeline.Run(compilation, progress);
             var plan = new MigrationPlan();
             plan.Changes.AddRange(changes);
             foreach (var change in changes) {
@@ -24,18 +26,20 @@ namespace Zenject2VContainer.Core {
             return plan;
         }
 
-        public static MigrationPlan RunYamlHeadless() {
+        public static MigrationPlan RunYamlHeadless(IMigrationProgress progress = null) {
+            progress = progress ?? NullMigrationProgress.Instance;
+            progress.Report("Migrating YAML assets", "Resolving GUIDs…", 0f);
             var projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
             var assetsRoot = Path.Combine(projectRoot, "Assets");
             var zenjectTable = ZenjectScriptGuidTable.LoadBundled();
             var lookup = ScriptGuidLookup.Resolve();
             var migrator = new AssetMigrator(zenjectTable, lookup);
-            return migrator.MigrateAssetsDirectory(assetsRoot);
+            return migrator.MigrateAssetsDirectory(assetsRoot, progress);
         }
 
-        public static MigrationPlan RunFullHeadless() {
-            var csharp = RunCSharpHeadless();
-            var yaml = RunYamlHeadless();
+        public static MigrationPlan RunFullHeadless(IMigrationProgress progress = null) {
+            var csharp = RunCSharpHeadless(progress);
+            var yaml = RunYamlHeadless(progress);
             var combined = new MigrationPlan();
             combined.Changes.AddRange(csharp.Changes);
             combined.Changes.AddRange(yaml.Changes);
@@ -67,7 +71,9 @@ namespace Zenject2VContainer.Core {
             return CompilationLoader.BuildFromSources("HostCompilation", sources, refs);
         }
 
-        public static ZenjectUsageReport RunScanHeadless() {
+        public static ZenjectUsageReport RunScanHeadless(IMigrationProgress progress = null) {
+            progress = progress ?? NullMigrationProgress.Instance;
+            progress.Report("Scanning", "Reading manifest and detecting installs…", 0.1f);
             var projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
             var manifestPath = Path.Combine(projectRoot, "Packages", "manifest.json");
             var manifestJson = File.Exists(manifestPath) ? File.ReadAllText(manifestPath) : "{}";
@@ -109,6 +115,7 @@ namespace Zenject2VContainer.Core {
             }
 
             // Asset files: every .unity / .prefab / .asset under Assets/.
+            progress.Report("Scanning", "Enumerating asset files…", 0.4f);
             var assetFiles = new List<string>();
             foreach (var p in Directory.EnumerateFiles(Path.Combine(projectRoot, "Assets"),
                          "*", SearchOption.AllDirectories)) {
@@ -116,6 +123,7 @@ namespace Zenject2VContainer.Core {
                 if (ext == ".unity" || ext == ".prefab" || ext == ".asset") assetFiles.Add(p);
             }
 
+            progress.Report("Scanning", $"Running Roslyn over {sources.Count} C# files and {assetFiles.Count} assets…", 0.7f);
             return ProjectScanner.Run(new ProjectScanner.Input {
                 ToolVersion = ToolVersion,
                 UnityVersion = Application.unityVersion,

@@ -15,7 +15,12 @@ namespace Zenject2VContainer.UI.Steps {
             EditorGUILayout.HelpBox("Snapshots all touched files into Temp/Zenject2VContainer/Backup/<timestamp>/. Writes C# changes, awaits compile, then writes YAML. Auto-rolls back on compile errors.", MessageType.Info);
 
             if (GUILayout.Button("Run preconditions")) {
-                _preconditions = PreconditionRunner.Run(ctx.ScanReport?.Install, ctx.UserOverrodeGitDirty);
+                EditorUtility.DisplayProgressBar("Preconditions", "Running checks…", 0.5f);
+                try {
+                    _preconditions = PreconditionRunner.Run(ctx.ScanReport?.Install, ctx.UserOverrodeGitDirty);
+                } finally {
+                    EditorUtility.ClearProgressBar();
+                }
                 foreach (var r in _preconditions.Results) ctx.Log.Info("Precondition", $"{r.Code}: {r.Message}");
             }
 
@@ -34,7 +39,13 @@ namespace Zenject2VContainer.UI.Steps {
             if (GUILayout.Button("Apply migration")) {
                 var projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
                 var svc = new MigrationApplyService(new EditorCompileWaiter());
-                var result = svc.Apply(projectRoot, ctx.CSharpPlan ?? MigrationPlan.Empty(), ctx.YamlPlan ?? MigrationPlan.Empty(), ctx.Log);
+                var p = new EditorMigrationProgress();
+                ApplyResult result;
+                try {
+                    result = svc.Apply(projectRoot, ctx.CSharpPlan ?? MigrationPlan.Empty(), ctx.YamlPlan ?? MigrationPlan.Empty(), ctx.Log, p);
+                } finally {
+                    p.Clear();
+                }
                 ctx.BackupTimestamp = result.BackupTimestamp;
                 ctx.ApplySucceeded = result.Success;
                 ctx.CompileErrors = result.CompileErrors;
