@@ -11,7 +11,7 @@ namespace Zenject2VContainer.UI.Steps {
         private PreconditionReport _preconditions;
 
         public void OnGUI(MigrationContext ctx) {
-            EditorGUILayout.HelpBox("Snapshots all touched files into Temp/Zenject2VContainer/Backup/<timestamp>/. Writes C# changes, awaits compile, then writes YAML. Auto-rolls back on compile errors.", MessageType.Info);
+            EditorGUILayout.HelpBox("Snapshots all touched files into Temp/Zenject2VContainer/Backup/<timestamp>/. Writes C# changes, awaits compile, then writes YAML. Auto-rolls back on compile errors. Run the Verify step afterwards to write MIGRATION_REPORT.md with post-apply stats.", MessageType.Info);
 
             if (GUILayout.Button("Run preconditions")) {
                 EditorUtility.DisplayProgressBar("Preconditions", "Running checks…", 0.5f);

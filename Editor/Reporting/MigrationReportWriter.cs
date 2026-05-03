@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Zenject2VContainer.Core;
 
@@ -42,7 +43,7 @@ namespace Zenject2VContainer.Reporting {
         // ── helpers ───────────────────────────────────────────────────────────
 
         /// Make path project-relative when it starts with projectRoot.
-        static string Rel(string projectRoot, string p) {
+        internal static string Rel(string projectRoot, string p) {
             if (string.IsNullOrEmpty(p) || string.IsNullOrEmpty(projectRoot)) return p;
             var root = projectRoot.Replace('\\', '/').TrimEnd('/') + "/";
             var n = p.Replace('\\', '/');
@@ -105,13 +106,17 @@ namespace Zenject2VContainer.Reporting {
             int csCount = 0, yamlCount = 0, manifestCount = 0;
             int highCount = 0, mediumCount = 0, lowCount = 0;
             foreach (var c in plan.Changes) {
-                if (c.Category == FileChangeCategory.CSharp) csCount++;
-                else if (c.Category == FileChangeCategory.Yaml) yamlCount++;
-                else if (c.Category == FileChangeCategory.Manifest) manifestCount++;
+                switch (c.Category) {
+                    case FileChangeCategory.CSharp:    csCount++;       break;
+                    case FileChangeCategory.Yaml:      yamlCount++;     break;
+                    case FileChangeCategory.Manifest:  manifestCount++; break;
+                }
 
-                if (c.Confidence == ChangeConfidence.High) highCount++;
-                else if (c.Confidence == ChangeConfidence.Medium) mediumCount++;
-                else if (c.Confidence == ChangeConfidence.LowFlagged) lowCount++;
+                switch (c.Confidence) {
+                    case ChangeConfidence.High:        highCount++;   break;
+                    case ChangeConfidence.Medium:      mediumCount++; break;
+                    case ChangeConfidence.LowFlagged:  lowCount++;    break;
+                }
             }
 
             sb.AppendLine("## Summary");
@@ -189,7 +194,7 @@ namespace Zenject2VContainer.Reporting {
                 groups[cat].Add(f);
             }
 
-            foreach (var cat in order) {
+            foreach (var cat in order.OrderBy(c => c, StringComparer.Ordinal)) {
                 var findings = groups[cat];
                 var anchor = CategoryAnchor(cat);
                 sb.AppendLine($"### {cat} ({findings.Count}) — [docs]({anchor})");

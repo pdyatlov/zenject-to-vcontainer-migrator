@@ -32,7 +32,7 @@ namespace Zenject2VContainer.UI.Steps {
 
                 // Derive skipped files: scanned files minus files that had changes applied.
                 var changedPaths = new HashSet<string>(
-                    combined.Changes.Select(c => Rel(projectRoot, c.OriginalPath)),
+                    combined.Changes.Select(c => MigrationReportWriter.Rel(projectRoot, c.OriginalPath)),
                     System.StringComparer.OrdinalIgnoreCase);
                 ctx.SkippedFiles = _post.AllFilesScanned
                     .Where(f => !changedPaths.Contains(f))
@@ -69,14 +69,6 @@ namespace Zenject2VContainer.UI.Steps {
                     EditorGUILayout.HelpBox("Verify clean — no residual in-scope Zenject usage.", MessageType.Info);
                 }
             }
-        }
-
-        private static string Rel(string projectRoot, string p) {
-            if (string.IsNullOrEmpty(p) || string.IsNullOrEmpty(projectRoot)) return p;
-            var root = projectRoot.Replace('\\', '/').TrimEnd('/') + "/";
-            var n = p.Replace('\\', '/');
-            return n.StartsWith(root, System.StringComparison.OrdinalIgnoreCase)
-                ? n.Substring(root.Length) : n;
         }
 
         private static IEnumerable<string> EnumerateRemainingFiles(ZenjectUsageReport report) {

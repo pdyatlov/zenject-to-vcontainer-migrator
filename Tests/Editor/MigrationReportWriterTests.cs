@@ -113,9 +113,9 @@ namespace Zenject2VContainer.Tests {
                 ProjectPath = "C:/Project", UnityVersion = "2022.3", ToolVersion = "0.1.0",
                 RunUtc = "2026-05-01T12:00:00Z"
             });
-            StringAssert.Contains("High:", md);
-            StringAssert.Contains("Medium:", md);
-            StringAssert.Contains("LowFlagged:", md);
+            StringAssert.Contains("High: 2", md);
+            StringAssert.Contains("Medium: 1", md);
+            StringAssert.Contains("LowFlagged: 1", md);
         }
 
         // ── polish item 2: grouped Changes subsections ────────────────────────
@@ -169,8 +169,8 @@ namespace Zenject2VContainer.Tests {
                 CompileErrorCount = 1
             });
             StringAssert.Contains("## Post-Apply Verification", md);
-            StringAssert.Contains("3", md);
-            StringAssert.Contains("1", md);
+            StringAssert.Contains("Remaining Zenject references (files): 3", md);
+            StringAssert.Contains("Compile errors after apply: 1", md);
         }
 
         // ── polish item 9: Skipped / Unchanged section ────────────────────────
