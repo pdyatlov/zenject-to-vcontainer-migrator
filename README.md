@@ -13,7 +13,7 @@ A Unity Editor tool that scans a Unity project for Zenject / Extenject usage and
 
 - Core bindings: `Bind`/`AsSingle`/`AsTransient`/`AsCached`/`BindInterfacesTo`/`BindInterfacesAndSelfTo`/`FromInstance`/`FromMethod`/`FromComponentInHierarchy`/`FromComponentInNewPrefab`/`FromNewComponentOnNewGameObject`/`WithId`
 - `MonoInstaller`, `ScriptableObjectInstaller`, and `Installer<T>` rewrites to `LifetimeScope` / `IInstaller`
-- Lifecycle interface rename: `IInitializable` → `IStartable`, `ITickable` → `ITickable`
+- Lifecycle interface rename: Zenject's `IInitializable` → VContainer's `IStartable`; Zenject's `ITickable` → VContainer's `ITickable` (same name, different namespace — handled by the `using Zenject;` → `using VContainer;` rewrite)
 - `PlaceholderFactory<TArg, TOut>` → `Func<TArg, TOut>` wrapper
 - `FromSubContainerResolve().ByMethod` — trivial cases only; non-trivial cases emit a manual TODO
 - `DiContainer` → `IObjectResolver` rename
