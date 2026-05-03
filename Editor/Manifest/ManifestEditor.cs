@@ -15,11 +15,21 @@ namespace Zenject2VContainer.Manifest {
 
         public static ManifestEditResult StripZenjectScopedRegistries(string manifestJson) {
             var result = new ManifestEditResult { NewText = manifestJson };
-            var blockMatch = Regex.Match(manifestJson,
-                @"""scopedRegistries""\s*:\s*\[(?<body>.*?)\](\s*,)?",
-                RegexOptions.Singleline);
-            if (!blockMatch.Success) return result;
-            var body = blockMatch.Groups["body"].Value;
+            // Locate `"scopedRegistries"` and bracket-match the array. Regex with
+            // `.*?\]` stops at the first inner `]` (the per-entry scopes array),
+            // truncating the body — so do it manually.
+            var keyMatch = Regex.Match(manifestJson, @"""scopedRegistries""\s*:\s*\[");
+            if (!keyMatch.Success) return result;
+            int arrayOpen = keyMatch.Index + keyMatch.Length - 1; // index of '['
+            int arrayClose = FindMatchingBracket(manifestJson, arrayOpen);
+            if (arrayClose < 0) return result;
+            int blockStart = keyMatch.Index;
+            int blockEnd = arrayClose + 1;
+            // Consume one trailing comma after `]` if present.
+            var trailing = Regex.Match(manifestJson.Substring(blockEnd), @"^\s*,");
+            if (trailing.Success) blockEnd += trailing.Length;
+            int blockLen = blockEnd - blockStart;
+            var body = manifestJson.Substring(arrayOpen + 1, arrayClose - arrayOpen - 1);
 
             var entries = SplitTopLevelObjects(body);
             var keep = new List<string>();
@@ -33,17 +43,38 @@ namespace Zenject2VContainer.Manifest {
             if (result.RemovedRegistryNames.Count == 0) return result;
 
             result.Modified = true;
+            string blockText = manifestJson.Substring(blockStart, blockLen);
             if (keep.Count == 0) {
                 // Drop the whole scopedRegistries property + any preceding comma in the parent object.
-                var prefix = manifestJson.Substring(0, blockMatch.Index);
+                var prefix = manifestJson.Substring(0, blockStart);
                 var trimmedPrefix = Regex.Replace(prefix, @",\s*$", "");
-                result.NewText = trimmedPrefix + manifestJson.Substring(blockMatch.Index + blockMatch.Length);
+                result.NewText = trimmedPrefix + manifestJson.Substring(blockEnd);
             } else {
                 var replacement = "\"scopedRegistries\": [" + string.Join(",", keep) + "]";
-                if (blockMatch.Value.TrimEnd().EndsWith(",")) replacement += ",";
-                result.NewText = manifestJson.Remove(blockMatch.Index, blockMatch.Length).Insert(blockMatch.Index, replacement);
+                if (blockText.TrimEnd().EndsWith(",")) replacement += ",";
+                result.NewText = manifestJson.Remove(blockStart, blockLen).Insert(blockStart, replacement);
             }
             return result;
+        }
+
+        private static int FindMatchingBracket(string s, int openIdx) {
+            int depth = 0;
+            bool inString = false;
+            for (int i = openIdx; i < s.Length; i++) {
+                char c = s[i];
+                if (inString) {
+                    if (c == '\\') { i++; continue; }
+                    if (c == '"') inString = false;
+                    continue;
+                }
+                if (c == '"') { inString = true; continue; }
+                if (c == '[') depth++;
+                else if (c == ']') {
+                    depth--;
+                    if (depth == 0) return i;
+                }
+            }
+            return -1;
         }
 
         private static List<string> SplitTopLevelObjects(string body) {

@@ -1,4 +1,5 @@
 using VContainer;
+using VContainer.Unity;
 
 public class FooInstaller : IInstaller
 {

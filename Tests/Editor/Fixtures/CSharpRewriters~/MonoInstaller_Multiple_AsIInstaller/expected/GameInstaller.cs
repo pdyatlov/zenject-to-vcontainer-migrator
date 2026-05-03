@@ -1,9 +1,9 @@
 using VContainer;
+using UnityEngine;
+using VContainer.Unity;
 
-public class GameInstaller : MonoInstaller, IInstaller
+public class GameInstaller : MonoBehaviour, IInstaller
 {
-    public override void InstallBindings() { /* legacy entry */ }
-
     public void Install(IContainerBuilder builder)
     {
         builder.Register<Foo>(Lifetime.Singleton).As<IFoo>();
