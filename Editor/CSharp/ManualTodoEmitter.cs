@@ -57,7 +57,7 @@ namespace Zenject2VContainer.CSharp {
                 FilePath = filePath,
                 Line = line,
                 Reason = reason,
-                DocLink = "https://github.com/<owner>/<repo>/blob/main/docs/manual-todos/" + category + ".md"
+                DocLink = "Docs~/manual-todos.md#" + category.ToLowerInvariant()
             };
         }
     }
