@@ -6,11 +6,11 @@ namespace Zenject2VContainer.Tests {
         [Test]
         public void Emits_Triple_Comment_Trivia_For_Category() {
             var trivia = ManualTodoEmitter.Build(ManualTodoEmitter.SignalBus,
-                "no equivalent", "docs.md");
+                "no equivalent");
             var text = trivia.ToFullString();
             StringAssert.Contains("MIGRATE-MANUAL [SignalBus]", text);
             StringAssert.Contains("no equivalent", text);
-            StringAssert.Contains("docs.md", text);
+            StringAssert.Contains("Docs~/manual-todos.md#signalbus", text);
         }
 
         [Test]
