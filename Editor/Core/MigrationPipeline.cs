@@ -10,7 +10,19 @@ using Zenject2VContainer.Yaml;
 
 namespace Zenject2VContainer.Core {
     public static class MigrationPipeline {
-        public const string ToolVersion = "0.1.0";
+        public static readonly string ToolVersion = ResolveVersion();
+
+        private static string ResolveVersion() {
+            try {
+                var info = UnityEditor.PackageManager.PackageInfo
+                    .FindForAssembly(typeof(MigrationPipeline).Assembly);
+                if (info != null && !string.IsNullOrEmpty(info.version))
+                    return info.version;
+            } catch {
+                // PackageInfo unavailable in some headless / test contexts — fall through.
+            }
+            return "0.1.0";
+        }
 
         public static MigrationPlan RunCSharpHeadless(IMigrationProgress progress = null) {
             progress = progress ?? NullMigrationProgress.Instance;
@@ -139,7 +151,7 @@ namespace Zenject2VContainer.Core {
             }
 
             progress.Report("Scanning", $"Running Roslyn over {sources.Count} C# files and {assetFiles.Count} assets…", 0.7f);
-            return ProjectScanner.Run(new ProjectScanner.Input {
+            var report = ProjectScanner.Run(new ProjectScanner.Input {
                 ToolVersion = ToolVersion,
                 UnityVersion = Application.unityVersion,
                 ScannedAtUtc = DateTime.UtcNow.ToString("o"),
@@ -150,6 +162,24 @@ namespace Zenject2VContainer.Core {
                 AssetFiles = assetFiles,
                 GuidTable = ZenjectScriptGuidTable.LoadBundled()
             });
+
+            // Populate AllFilesScanned: project-relative, forward-slash, deduped.
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var rootPrefix = projectRoot.Replace('\\', '/').TrimEnd('/') + "/";
+            foreach (var (filePath, _) in sources) {
+                var n = filePath.Replace('\\', '/');
+                var rel = n.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase)
+                    ? n.Substring(rootPrefix.Length) : n;
+                if (seen.Add(rel)) report.AllFilesScanned.Add(rel);
+            }
+            foreach (var filePath in assetFiles) {
+                var n = filePath.Replace('\\', '/');
+                var rel = n.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase)
+                    ? n.Substring(rootPrefix.Length) : n;
+                if (seen.Add(rel)) report.AllFilesScanned.Add(rel);
+            }
+
+            return report;
         }
 
         // Assemblies whose source files we deliberately skip during scan. Their compiled

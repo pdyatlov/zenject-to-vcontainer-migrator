@@ -12,5 +12,6 @@ namespace Zenject2VContainer.Core {
         public List<string> CompileErrors = new List<string>();
         public MigrationLog Log = new MigrationLog();
         public bool UserOverrodeGitDirty;
+        public string[] SkippedFiles = new string[0];
     }
 }

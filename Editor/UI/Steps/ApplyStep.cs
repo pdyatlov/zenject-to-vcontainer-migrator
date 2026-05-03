@@ -2,7 +2,6 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using Zenject2VContainer.Core;
-using Zenject2VContainer.Reporting;
 
 namespace Zenject2VContainer.UI.Steps {
     public sealed class ApplyStep : IWizardStep {
@@ -51,18 +50,7 @@ namespace Zenject2VContainer.UI.Steps {
                 ctx.CompileErrors = result.CompileErrors;
                 ctx.Log.Info("Apply", result.Message);
 
-                var combined = MigrationPlan.Empty();
-                if (ctx.CSharpPlan != null) { combined.Changes.AddRange(ctx.CSharpPlan.Changes); combined.Unsupported.AddRange(ctx.CSharpPlan.Unsupported); }
-                if (ctx.YamlPlan != null)   { combined.Changes.AddRange(ctx.YamlPlan.Changes);   combined.Unsupported.AddRange(ctx.YamlPlan.Unsupported); }
                 if (result.Success) {
-                    var reportPath = MigrationReportWriter.WriteToDisk(projectRoot, combined, new MigrationReportContext {
-                        ProjectPath = projectRoot,
-                        UnityVersion = Application.unityVersion,
-                        ToolVersion = MigrationPipeline.ToolVersion,
-                        RunUtc = System.DateTime.UtcNow.ToString("o"),
-                        BackupTimestamp = result.BackupTimestamp
-                    });
-                    ctx.Log.Info("Report", "Wrote " + reportPath);
                     AssetDatabase.Refresh();
                 }
             }

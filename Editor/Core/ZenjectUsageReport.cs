@@ -62,6 +62,7 @@ namespace Zenject2VContainer.Core {
         public List<AssetFinding> AssetFindings = new();
         public InstallationInfo Install = new();
         public List<UnsupportedFeature> Unsupported = new();
+        public List<string> AllFilesScanned = new();  // project-relative, forward-slash, deduped
 
         public static string ToJson(ZenjectUsageReport report) =>
             UnityEngine.JsonUtility.ToJson(report, prettyPrint: true);
