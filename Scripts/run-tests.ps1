@@ -7,6 +7,7 @@ param(
 . "$PSScriptRoot\find-unity.ps1"
 $unity = Resolve-Unity
 New-Item -ItemType Directory -Force -Path (Split-Path $ResultsPath) | Out-Null
+New-Item -ItemType Directory -Force -Path (Split-Path $LogPath) | Out-Null
 & $unity -batchmode -nographics -projectPath $ProjectPath `
     -runTests -testPlatform $TestPlatform `
     -testResults $ResultsPath -logFile $LogPath
