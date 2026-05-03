@@ -11,13 +11,19 @@ namespace Zenject2VContainer.Headless {
         // Reads `-projectRoot <path>` and `-outputDir <path>` from the CLI args.
         // Falls back to `Application.dataPath/..` and `Library/Zenject2VContainer/headless`.
         public static void RunFullEntry() {
-            var args = Environment.GetCommandLineArgs();
-            string projectRoot = ReadFlag(args, "-projectRoot")
-                ?? Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, ".."));
-            string outDir = ReadFlag(args, "-outputDir")
-                ?? Path.Combine(projectRoot, "Library", "Zenject2VContainer", "headless");
-            int code = RunFull(projectRoot, outDir);
-            EditorApplication.Exit(code);
+            int code = 1;
+            try {
+                var args = Environment.GetCommandLineArgs();
+                string projectRoot = ReadFlag(args, "-projectRoot")
+                    ?? Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, ".."));
+                string outDir = ReadFlag(args, "-outputDir")
+                    ?? Path.Combine(projectRoot, "Library", "Zenject2VContainer", "headless");
+                code = RunFull(projectRoot, outDir);
+            } catch (Exception ex) {
+                UnityEngine.Debug.LogError("[Zenject2VContainer] headless entry failed: " + ex);
+            } finally {
+                EditorApplication.Exit(code);
+            }
         }
 
         public static int RunFull(string projectRoot, string outputDir) {
@@ -34,13 +40,13 @@ namespace Zenject2VContainer.Headless {
                     BackupTimestamp = null,
                     RemainingZenjectFiles = 0,
                     CompileErrorCount = 0,
-                    SkippedFiles = new string[0]
+                    SkippedFiles = Array.Empty<string>()
                 };
-                File.WriteAllText(Path.Combine(outputDir, "MIGRATION_REPORT.md"),
-                    MigrationReportWriter.Render(plan, ctx));
+                var reportPath = Path.Combine(outputDir, "MIGRATION_REPORT.md");
+                File.WriteAllText(reportPath, MigrationReportWriter.Render(plan, ctx));
                 File.WriteAllText(Path.Combine(outputDir, "changes.json"),
                     SerializeChanges(plan));
-                UnityEngine.Debug.Log($"[Zenject2VContainer] headless report at {outputDir}");
+                UnityEngine.Debug.Log($"[Zenject2VContainer] headless report at {reportPath}");
                 return 0;
             } catch (Exception ex) {
                 UnityEngine.Debug.LogError("[Zenject2VContainer] headless failed: " + ex);
