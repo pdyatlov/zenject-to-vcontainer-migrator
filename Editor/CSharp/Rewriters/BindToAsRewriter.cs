@@ -72,7 +72,6 @@ namespace Zenject2VContainer.CSharp.Rewriters {
                 var bfTrivia = ManualTodoEmitter.Build(
                     ManualTodoEmitter.CustomFactory,
                     "Container.BindFactory<...> has no automated translation; rewrite as builder.RegisterFactory<TArg, TOut>(...).",
-                    "https://github.com/<owner>/<repo>/blob/main/docs/manual-todos/CustomFactory.md",
                     bfIndent);
                 return lastInChainEarly.WithLeadingTrivia(lastInChainEarly.GetLeadingTrivia().AddRange(bfTrivia));
             }
@@ -154,7 +153,6 @@ namespace Zenject2VContainer.CSharp.Rewriters {
                 var trivia = ManualTodoEmitter.Build(
                     ManualTodoEmitter.ConditionalBind,
                     reason,
-                    "https://github.com/<owner>/<repo>/blob/main/docs/manual-todos/ConditionalBind.md",
                     indent);
                 return lastInChain.WithLeadingTrivia(lastInChain.GetLeadingTrivia().AddRange(trivia));
             }

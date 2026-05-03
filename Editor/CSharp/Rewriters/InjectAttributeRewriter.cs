@@ -35,7 +35,6 @@ namespace Zenject2VContainer.CSharp.Rewriters {
                     var trivia = ManualTodoEmitter.Build(
                         ManualTodoEmitter.InjectOptional,
                         "VContainer has no direct field/method [InjectOptional]; constructor defaults work.",
-                        "https://github.com/<owner>/<repo>/blob/main/docs/manual-todos/InjectOptional.md",
                         indent);
                     return visited.WithLeadingTrivia(visited.GetLeadingTrivia().AddRange(trivia));
                 }

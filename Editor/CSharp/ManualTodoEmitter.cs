@@ -18,7 +18,8 @@ namespace Zenject2VContainer.CSharp {
         public const string LifecycleStartCollision = "LifecycleStartCollision";
         public const string InstallerWiring = "InstallerWiring";
 
-        public static SyntaxTriviaList Build(string category, string reason, string docLink, string indent = "") {
+        public static SyntaxTriviaList Build(string category, string reason, string indent = "") {
+            var docLink = "Docs~/manual-todos.md#" + category.ToLowerInvariant();
             var lines = new[] {
                 "// TODO: MIGRATE-MANUAL [" + category + "]",
                 "// Reason: " + reason,

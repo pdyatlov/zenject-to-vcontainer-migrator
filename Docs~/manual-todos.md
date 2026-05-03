@@ -2,7 +2,7 @@
 
 The migrator emits `// TODO: MIGRATE-MANUAL [Category]` comments wherever
 it cannot translate a Zenject construct safely. Each category links here
-for context, recommended VContainer pattern, and a worked example.
+for context, recommended VContainer pattern, and a worked example where applicable.
 
 ## Table of contents
 
@@ -148,9 +148,9 @@ builder.RegisterFactory<int, IFoo>(container =>
 colliding with the existing Unity message. The migrator skips the rename
 and flags it.
 
-**Recommended:** Pick one entry point. If you keep `IStartable`, rename
+**Recommended:** Pick one entry point. If you keep `IInitializable`, rename
 the existing `Start` method. If you keep Unity's `Start`, drop
-`IStartable` and inline the init code.
+`IInitializable` and inline the init code.
 
 ---
 
