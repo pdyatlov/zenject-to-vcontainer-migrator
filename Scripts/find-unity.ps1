@@ -1,22 +1,46 @@
-# Resolves a Unity install path satisfying a minimum version. The package
-# requires Unity 2021.3+, so the default minimum is 2021.3. Honours
-# $env:UNITY_PATH; otherwise probes Unity Hub install dirs and picks the
-# newest install that meets the minimum.
+# Resolves a Unity install path. Resolution order:
+#   1. $env:UNITY_PATH if it points at a real file.
+#   2. Exact match against the host's pinned editor when -ProjectPath is given
+#      (read from ProjectSettings/ProjectVersion.txt).
+#   3. Newest installed editor satisfying -MinVersion (default 2021.3 — the
+#      package's minimum).
+# Hub install roots probed: C:\Program Files\Unity\Hub\Editor and
+# %LOCALAPPDATA%\Unity\Hub\Editor.
 
 function Resolve-Unity {
-    param([string]$MinVersion = "2021.3")
+    param(
+        [string]$MinVersion = "2021.3",
+        [string]$ProjectPath
+    )
     if ($env:UNITY_PATH -and (Test-Path $env:UNITY_PATH)) { return $env:UNITY_PATH }
-    $min = [Version]$MinVersion
+
     $candidates = @(
         "C:\Program Files\Unity\Hub\Editor",
         "$env:LOCALAPPDATA\Unity\Hub\Editor"
     )
+
+    if ($ProjectPath) {
+        $versionFile = Join-Path $ProjectPath "ProjectSettings\ProjectVersion.txt"
+        if (Test-Path $versionFile) {
+            $line = Select-String -Path $versionFile -Pattern '^m_EditorVersion:\s*(\S+)' `
+                | Select-Object -First 1
+            if ($line) {
+                $pinned = $line.Matches[0].Groups[1].Value
+                foreach ($root in $candidates) {
+                    $exe = Join-Path $root "$pinned\Editor\Unity.exe"
+                    if (Test-Path $exe) { return $exe }
+                }
+                Write-Warning "Pinned editor $pinned not installed; falling back to newest >= $MinVersion."
+            }
+        }
+    }
+
+    $min = [Version]$MinVersion
     foreach ($root in $candidates) {
         if (-not (Test-Path $root)) { continue }
-        # Strip the trailing release-letter suffix (f1/b1/a1/etc.) before
-        # parsing as [Version], then keep only installs >= MinVersion. Sort
-        # by parsed version so 2021.3.10f1 ranks above 2021.3.9f1
-        # (alphabetic Sort would put 9f1 above 10f1).
+        # Strip trailing release-letter suffix (f1/b1/a1/etc.) before parsing
+        # as [Version]. Sort by parsed version so 2021.3.10f1 ranks above
+        # 2021.3.9f1 (alphabetic Sort would put 9f1 above 10f1).
         $hit = Get-ChildItem $root -Directory `
             | ForEach-Object {
                 $stripped = $_.Name -replace '[a-zA-Z]\d+$',''

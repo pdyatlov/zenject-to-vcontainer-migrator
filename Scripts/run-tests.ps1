@@ -5,7 +5,7 @@ param(
     [string]$TestPlatform = "EditMode"
 )
 . "$PSScriptRoot\find-unity.ps1"
-$unity = Resolve-Unity
+$unity = Resolve-Unity -ProjectPath $ProjectPath
 New-Item -ItemType Directory -Force -Path (Split-Path $ResultsPath) | Out-Null
 New-Item -ItemType Directory -Force -Path (Split-Path $LogPath) | Out-Null
 & $unity -batchmode -nographics -projectPath $ProjectPath `
